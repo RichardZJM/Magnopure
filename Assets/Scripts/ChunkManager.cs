@@ -70,7 +70,8 @@ public class ChunkManager : MonoBehaviour
                         // Generate a new chunk
                         var centerPosition = new Vector3(
                             currentChunkIndex.x * _chunkSize,
-                            currentChunkIndex.y * _chunkSize
+                            currentChunkIndex.y * _chunkSize,
+                            0
                         );
 
                         var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);

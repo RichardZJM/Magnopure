@@ -49,7 +49,7 @@ public class Chunk : MonoBehaviour
             var magnetRelativePos = new Vector3(
                 Random.Range(-_size / 2, _size / 2),
                 Random.Range(-_size / 2, _size / 2),
-                0
+                transform.position.z - 1 // offset magnet to prevent sprite overlap
             );
             _magnets.Add(
                 Instantiate(
