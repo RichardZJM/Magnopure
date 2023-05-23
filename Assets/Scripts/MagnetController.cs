@@ -1,22 +1,25 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.InputSystem;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using System;
+
+public class MagnetObject
+{
+    public Rigidbody2D rigidBody;
+    public Light2D light;
+}
 
 public class MagnetController : MonoBehaviour
 {
     //Constants
     private const float _slimeMaxCharge = 100;  
     [SerializeField] private float  _magneticScalingConstant = 1;
+    [SerializeField] private bool _isUsingChunks = false;
     private float _slimeActiveCharge = 0;
     
     //References
     private Rigidbody2D _slimeRigidBody;
-    private GameObject[]  _magnetObjects;
-    private List<Rigidbody2D> _magnetRigidBodies = new List<Rigidbody2D>(); 
-    private List<Light2D> _magnetLights = new List<Light2D>(); 
+    private Dictionary<int, MagnetObject> _magnetObjects;
 
     // Start is called before the first frame update
     void Awake()
@@ -26,21 +29,22 @@ public class MagnetController : MonoBehaviour
         // _slimeRigidBody.AddForce(new Vector2(300,0));
         _slimeRigidBody.AddTorque(40);
 
-        OnMagnetsChange();
+        _magnetObjects = new Dictionary<int, MagnetObject>();
+
+        if (!_isUsingChunks)
+        {
+            OnAddMagnets(new List<GameObject>(GameObject.FindGameObjectsWithTag("magnet")));
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        //Calculate Forces
+        //Calculate forces and change colours
         Vector2 force = new Vector2(0,0);
-        foreach (var magnetRigidBody in _magnetRigidBodies){
-            force += CalculatePairwiseForce(magnetRigidBody);
-            
-        }
-        //Change colours
-        foreach (var magnetLight in _magnetLights){
-            magnetLight.color = Color.Lerp(Color.red, Color.blue, (float)_slimeActiveCharge/2 +0.5f);
+        foreach (var magnetObject in _magnetObjects.Values){
+            force += CalculatePairwiseForce(magnetObject.rigidBody);
+            magnetObject.light.color = Color.Lerp(Color.red, Color.blue, (float)_slimeActiveCharge / 2 + 0.5f);
         }
 
         _slimeRigidBody.AddForce(force);
@@ -56,24 +60,26 @@ public class MagnetController : MonoBehaviour
         return force;
     }
 
-    public void OnMagnetsChange()
+    public void OnAddMagnets(List<GameObject> magnets)
     {
-        StartCoroutine(UpdateMagnets());
+        foreach (var magnet in magnets)
+        {
+            _magnetObjects.Add(
+                magnet.GetInstanceID(), 
+                new MagnetObject
+                {
+                    rigidBody = magnet.GetComponent<Rigidbody2D>(),
+                    light = magnet.GetComponent<Light2D>()
+                }
+            );
+        }
     }
 
-    private IEnumerator UpdateMagnets()
+    public void OnRemoveMagnets(List<GameObject> magnets)
     {
-        // Wait for Start() methods of new chunks to run so new magnets can be generated
-        yield return new WaitForEndOfFrame();
-        // Retrieve all magnets in the world
-        _magnetObjects = GameObject.FindGameObjectsWithTag("magnet");
-        Debug.Log(_magnetObjects.Length);
-        _magnetRigidBodies.Clear();
-        _magnetLights.Clear();
-        foreach (var magnetObject in _magnetObjects)
+        foreach (var magnet in magnets)
         {
-            _magnetRigidBodies.Add(magnetObject.GetComponent<Rigidbody2D>());
-            _magnetLights.Add(magnetObject.GetComponent<Light2D>());
+            _magnetObjects.Remove(magnet.GetInstanceID());
         }
     }
 }

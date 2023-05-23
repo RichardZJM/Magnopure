@@ -15,7 +15,8 @@ public class ChunkManager : MonoBehaviour
     [SerializeField] private float _renderPadding;
     [SerializeField] private Camera _mainCamera;
     [SerializeField] private GameObject _chunkPrefab;
-    [SerializeField] private UnityEvent _onMagnetsChange;
+    [SerializeField] private UnityEvent<List<GameObject>> _onAddMagnets;
+    [SerializeField] private UnityEvent<List<GameObject>> _onRemoveMagnets;
 
     // The chunks currently present in the world
     // Chunks are identified by an index which is its position in a coordiate
@@ -38,8 +39,8 @@ public class ChunkManager : MonoBehaviour
         // This identifies the chunks at the opposite corners of the rendering
         // area.
         var minChunkIndex = new Vector2Int(
-            (int)((cameraBounds.min.x - _renderPadding) / _chunkSize),
-            (int)((cameraBounds.min.y - _renderPadding) / _chunkSize)
+            Mathf.FloorToInt((cameraBounds.min.x - _renderPadding + _chunkSize / 2) / _chunkSize),
+            Mathf.FloorToInt((cameraBounds.min.y - _renderPadding + _chunkSize / 2) / _chunkSize)
         );
         var maxChunkIndex = new Vector2Int(
             (int)((cameraBounds.max.x + _renderPadding) / _chunkSize),
@@ -50,7 +51,6 @@ public class ChunkManager : MonoBehaviour
         // chunks that need to be generated and removed
         if (_storedMinChunkIndex == null || _storedMinChunkIndex != minChunkIndex)
         {
-            var magnets = new List<GameObject>();
             // Assume all chunks need to be removed, then go through chunks still in the 
             // rendering area and take them out of the set.
             var chunksToRemove = new HashSet<Vector2Int>(_activeChunks.Keys);
@@ -69,14 +69,13 @@ public class ChunkManager : MonoBehaviour
                     {
                         // Generate a new chunk
                         var centerPosition = new Vector3(
-                            currentChunkIndex.x * _chunkSize + _chunkSize / 2,
-                            currentChunkIndex.y * _chunkSize + _chunkSize / 2
+                            currentChunkIndex.x * _chunkSize,
+                            currentChunkIndex.y * _chunkSize
                         );
 
                         var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
                         var chunkHandler = chunkObject.GetComponent<Chunk>();
-                        chunkHandler.Initialize(_chunkSize);
-                        magnets.AddRange(chunkHandler.Magnets);
+                        chunkHandler.Initialize(_chunkSize, _onAddMagnets, _onRemoveMagnets);
 
                         _activeChunks.Add(currentChunkIndex, chunkObject);
                     }
@@ -89,8 +88,6 @@ public class ChunkManager : MonoBehaviour
                 Destroy(_activeChunks[chunk]);
                 _activeChunks.Remove(chunk);
             }
-
-            _onMagnetsChange.Invoke();
 
             _storedMinChunkIndex = minChunkIndex;
         }

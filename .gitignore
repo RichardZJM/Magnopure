@@ -73,6 +73,3 @@ crashlytics-build.properties
 
 # Visual studio configs
 .vsconfig
-
-# NuGet packages
-Packages
