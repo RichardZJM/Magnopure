@@ -43,8 +43,8 @@ public class ChunkManager : MonoBehaviour
             Mathf.FloorToInt((cameraBounds.min.y - _renderPadding + _chunkSize / 2) / _chunkSize)
         );
         var maxChunkIndex = new Vector2Int(
-            (int)((cameraBounds.max.x + _renderPadding) / _chunkSize),
-            (int)((cameraBounds.max.y + _renderPadding) / _chunkSize)
+            Mathf.FloorToInt((cameraBounds.max.x + _renderPadding + _chunkSize / 2) / _chunkSize),
+            Mathf.FloorToInt((cameraBounds.max.y + _renderPadding + _chunkSize / 2) / _chunkSize)
         );
 
         // The player has moved to a new chunk, in which case we must recalculated
