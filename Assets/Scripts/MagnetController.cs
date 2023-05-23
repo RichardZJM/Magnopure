@@ -26,12 +26,7 @@ public class MagnetController : MonoBehaviour
         // _slimeRigidBody.AddForce(new Vector2(300,0));
         _slimeRigidBody.AddTorque(40);
 
-        _magnetObjects = GameObject.FindGameObjectsWithTag("magnet");
-        Debug.Log(_magnetObjects.Length);
-        foreach (var magnetObject in _magnetObjects){
-            _magnetRigidBodies.Add(magnetObject.GetComponent<Rigidbody2D>());
-            _magnetLights.Add(magnetObject.GetComponent<Light2D>());
-        }
+        OnMagnetsChange();
     }
 
     // Update is called once per frame
@@ -49,8 +44,6 @@ public class MagnetController : MonoBehaviour
         }
 
         _slimeRigidBody.AddForce(force);
-        
-
     }
 
     public void OnSliderChange(System.Single activeCharge){
@@ -63,4 +56,24 @@ public class MagnetController : MonoBehaviour
         return force;
     }
 
+    public void OnMagnetsChange()
+    {
+        StartCoroutine(UpdateMagnets());
+    }
+
+    private IEnumerator UpdateMagnets()
+    {
+        // Wait for Start() methods of new chunks to run so new magnets can be generated
+        yield return new WaitForEndOfFrame();
+        // Retrieve all magnets in the world
+        _magnetObjects = GameObject.FindGameObjectsWithTag("magnet");
+        Debug.Log(_magnetObjects.Length);
+        _magnetRigidBodies.Clear();
+        _magnetLights.Clear();
+        foreach (var magnetObject in _magnetObjects)
+        {
+            _magnetRigidBodies.Add(magnetObject.GetComponent<Rigidbody2D>());
+            _magnetLights.Add(magnetObject.GetComponent<Light2D>());
+        }
+    }
 }
