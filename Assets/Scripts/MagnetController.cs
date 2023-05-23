@@ -14,7 +14,6 @@ public class MagnetController : MonoBehaviour
     //Constants
     private const float _slimeMaxCharge = 100;  
     [SerializeField] private float  _magneticScalingConstant = 1;
-    [SerializeField] private bool _isUsingChunks = false;
     private float _slimeActiveCharge = 0;
     
     //References
@@ -31,10 +30,8 @@ public class MagnetController : MonoBehaviour
 
         _magnetObjects = new Dictionary<int, MagnetObject>();
 
-        if (!_isUsingChunks)
-        {
-            OnAddMagnets(new List<GameObject>(GameObject.FindGameObjectsWithTag("magnet")));
-        }
+        // Find manually placed magnets
+        OnAddMagnets(new List<GameObject>(GameObject.FindGameObjectsWithTag("magnet")));
     }
 
     // Update is called once per frame

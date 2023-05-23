@@ -699,13 +699,28 @@ MonoBehaviour:
   _renderPadding: 16
   _mainCamera: {fileID: 519420031}
   _chunkPrefab: {fileID: 5871769894803508280, guid: c838ecdf33561594f819c8b54edc2c54, type: 3}
-  _onMagnetsChange:
+  _onAddMagnets:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1217813257}
         m_TargetAssemblyTypeName: MagnetController, Assembly-CSharp
-        m_MethodName: OnMagnetsChange
-        m_Mode: 1
+        m_MethodName: OnAddMagnets
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  _onRemoveMagnets:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1217813257}
+        m_TargetAssemblyTypeName: MagnetController, Assembly-CSharp
+        m_MethodName: OnRemoveMagnets
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -784,6 +799,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _magneticScalingConstant: 0.03
+  _isUsingChunks: 0
 --- !u!212 &1217813258
 SpriteRenderer:
   m_ObjectHideFlags: 0
