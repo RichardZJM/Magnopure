@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -23,13 +24,17 @@ public class ChunkManager : MonoBehaviour
     // space. A chunk with index (x, y) means it is x chunks away horizontally and
     // y chunks away vertically from the origin.
     private Dictionary<Vector2Int, GameObject> _activeChunks;
-
+    // This is the origin around which chunk positions are calculated
+    // It will change when player gets teleports and the chunks must teleport with
+    // the player
+    private Vector3 _chunkOrigin;
     private Vector2Int? _storedMinChunkIndex;
 
     private void Awake()
     {
         _activeChunks = new Dictionary<Vector2Int, GameObject>();
-        _storedMinChunkIndex = null;
+        _chunkOrigin = Vector3.zero;
+        _storedMinChunkIndex = null;        
     }
 
     private void Update()
@@ -38,14 +43,10 @@ public class ChunkManager : MonoBehaviour
 
         // This identifies the chunks at the opposite corners of the rendering
         // area.
-        var minChunkIndex = new Vector2Int(
-            Mathf.FloorToInt((cameraBounds.min.x - _renderPadding + _chunkSize / 2) / _chunkSize),
-            Mathf.FloorToInt((cameraBounds.min.y - _renderPadding + _chunkSize / 2) / _chunkSize)
-        );
-        var maxChunkIndex = new Vector2Int(
-            Mathf.FloorToInt((cameraBounds.max.x + _renderPadding + _chunkSize / 2) / _chunkSize),
-            Mathf.FloorToInt((cameraBounds.max.y + _renderPadding + _chunkSize / 2) / _chunkSize)
-        );
+        var minChunkIndex = GetChunkIndex(
+            new Vector2(cameraBounds.min.x - _renderPadding, cameraBounds.min.y - _renderPadding));
+        var maxChunkIndex = GetChunkIndex(
+            new Vector2(cameraBounds.max.x + _renderPadding, cameraBounds.max.y + _renderPadding));
 
         // The player has moved to a new chunk, in which case we must recalculated
         // chunks that need to be generated and removed
@@ -69,9 +70,9 @@ public class ChunkManager : MonoBehaviour
                     {
                         // Generate a new chunk
                         var centerPosition = new Vector3(
-                            currentChunkIndex.x * _chunkSize,
-                            currentChunkIndex.y * _chunkSize,
-                            0
+                            currentChunkIndex.x * _chunkSize + _chunkOrigin.x,
+                            currentChunkIndex.y * _chunkSize + _chunkOrigin.y,
+                            _chunkOrigin.z
                         );
 
                         var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
@@ -106,5 +107,49 @@ public class ChunkManager : MonoBehaviour
             new Vector3(cameraHeight * screenAspect, cameraHeight, 0)
         );
         return bounds;
+    }
+
+    /// <summary>
+    /// A chunk index identifies its position in a coordiate space. 
+    /// A chunk with index (x, y) means it is x chunks away horizontally and
+    /// y chunks away vertically from the origin.
+    /// </summary>
+    /// <param name="position">A position in the 2D world</param>
+    /// <returns>The index identifying the chunk which covers the position</returns>
+    private Vector2Int GetChunkIndex(Vector2 position)
+    {
+        return new Vector2Int(
+            Mathf.FloorToInt((position.x + _chunkSize / 2 - _chunkOrigin.x) / _chunkSize),
+            Mathf.FloorToInt((position.y + _chunkSize / 2 - _chunkOrigin.y) / _chunkSize)
+        );
+    }
+
+    /// <summary>
+    /// Updates the index identifying the chunks in the dictionary
+    /// </summary>
+    public void OnChunkPositionsChanged()
+    {
+        var newActiveChunks = new Dictionary<Vector2Int, GameObject>();
+        
+        foreach (var chunk in _activeChunks.Values)
+        {
+            newActiveChunks.Add(GetChunkIndex(chunk.transform.position), chunk);
+        }
+
+        if (newActiveChunks.Count > 0)
+        {
+            var someChunkIndex = newActiveChunks.First().Key;
+            var someChunkPosition = newActiveChunks[someChunkIndex].transform.position;
+            // If the chunk position did not change, we would get back the same origin
+            // if we subtract the position of a chunk by the distance vector to the
+            // origin chunk. But if chunk positions were changed, we get a new origin.
+            _chunkOrigin = new Vector3(
+                someChunkPosition.x - someChunkIndex.x * _chunkSize, 
+                someChunkPosition.y - someChunkIndex.y * _chunkSize, 
+                someChunkPosition.z
+            );
+        }
+
+        _activeChunks = newActiveChunks;
     }
 }

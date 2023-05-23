@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using System;
+using Cinemachine;
 
 public class MagnetObject
 {
@@ -77,6 +78,22 @@ public class MagnetController : MonoBehaviour
         foreach (var magnet in magnets)
         {
             _magnetObjects.Remove(magnet.GetInstanceID());
+        }
+    }
+
+    /// <summary>
+    /// Pervent jerking motion on camera following slime
+    /// https://forum.unity.com/threads/reposition-target-and-camera-runtime-how-to-avoid-the-popping.514293/
+    /// </summary>
+    /// <param name="shiftDelta"></param>
+    public void OnSlimeMoved(Vector3 shiftDelta)
+    {
+        int numVcams = CinemachineCore.Instance.VirtualCameraCount;
+        for (int i = 0; i < numVcams; ++i)
+        {
+
+            CinemachineCore.Instance.GetVirtualCamera(i)
+                .OnTargetObjectWarped(transform, shiftDelta);
         }
     }
 }
