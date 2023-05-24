@@ -39,13 +39,18 @@ public class MagnetController : MonoBehaviour
     void Update()
     {
         //Calculate forces and change colours
-        Vector2 force = new Vector2(0,0);
+        Vector2 netSlimeForce = new Vector2(0,0);
         foreach (var magnetObject in _magnetObjects.Values){
-            force += CalculatePairwiseForce(magnetObject.rigidBody);
+            
+            Vector2 force = CalculatePairwiseForce(magnetObject.rigidBody);
+            //Use Newton's Law to apply reaction force to magnets (static magnets resist forces automatically)
+            magnetObject.rigidBody.AddForce(-force);
+            netSlimeForce += force;
+            // Interpolate the glow of the magnets
             magnetObject.light.color = Color.Lerp(Color.red, Color.blue, (float)_slimeActiveCharge / 2 + 0.5f);
         }
 
-        _slimeRigidBody.AddForce(force);
+        _slimeRigidBody.AddForce(netSlimeForce);
     }
 
     public void OnSliderChange(System.Single activeCharge){
