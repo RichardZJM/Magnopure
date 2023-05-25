@@ -52,10 +52,34 @@ public class MagnetController : MonoBehaviour
         _slimeActiveCharge = - (float) activeCharge;
     }
 
-    private Vector2 CalculatePairwiseForce( Rigidbody2D magnetRigidBody){
+    private Vector2 getBezierPoint(float t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
+    {
+        if (t > 1f)
+            return new Vector2(1, 0);
+        float cx = 3 * (p1.x - p0.x);
+        float cy = 3 * (p1.y - p0.y);
+        float bx = 3 * (p2.x - p1.x) - cx;
+        float by = 3 * (p2.y - p1.y) - cy;
+        float ax = p3.x - p0.x - cx - bx;
+        float ay = p3.y - p0.y - cy - by;
+        float cube = t * t * t;
+        float square = t * t;
+        float resX = (ax * cube) + (bx * square) + (cx * t) + p0.x;
+        float resY = (ay * cube) + (by * square) + (cy * t) + p0.y;
+        return new Vector2(resX, resY);
+    }
+
+    private Vector2 CalculatePairwiseForce(Rigidbody2D magnetRigidBody)
+    {
         Vector2 relativePosition = magnetRigidBody.position - _slimeRigidBody.position;
-        Vector2 force = _magneticScalingConstant * _slimeActiveCharge * _slimeMaxCharge / (float)Math.Pow(relativePosition.magnitude,2) * relativePosition.normalized;
-        return force;
+        if (relativePosition.magnitude > 10f)
+            return new Vector2(0, 0);
+        else
+        {
+            Vector2 force = _magneticScalingConstant * _slimeActiveCharge * _slimeMaxCharge * relativePosition.normalized;
+            force *= getBezierPoint(relativePosition.magnitude / 10f, new Vector2(0f, 1f), new Vector2(0.25f, 0.25f), new Vector2(0.5f, 0f), new Vector2(1f, 0f)).y;
+            return force;
+        }
     }
 
     public void OnAddMagnets(List<GameObject> magnets)

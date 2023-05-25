@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Follow: {fileID: 1217813259}
   m_Lens:
     FieldOfView: 34
-    OrthographicSize: 3.27
+    OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -350,7 +350,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 3.27
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -798,7 +798,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 003a0fb2d9927698fbb73a051b6b11ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _magneticScalingConstant: 0.03
+  _magneticScalingConstant: 0.02
 --- !u!212 &1217813258
 SpriteRenderer:
   m_ObjectHideFlags: 0
