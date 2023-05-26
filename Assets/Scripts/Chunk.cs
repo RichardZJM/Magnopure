@@ -20,6 +20,8 @@ public class Chunk : MonoBehaviour
 
     private int _minNumMagnets = 0;
     private int _maxNumMagnets = 3;
+    private int _blockResolution = 8;
+
 
     public void Initialize(float chunkSize, UnityEvent<List<GameObject>> onAddMagnets, UnityEvent<List<GameObject>> onRemoveMagnets)
     {
@@ -28,6 +30,7 @@ public class Chunk : MonoBehaviour
             return;
         }
 
+        
         _isInitialized = true;
         _size = chunkSize;
         this.onAddMagnets = onAddMagnets;
