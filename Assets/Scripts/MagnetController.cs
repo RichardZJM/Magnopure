@@ -44,9 +44,22 @@ public class MagnetController : MonoBehaviour
     {
         //Calculate forces and change colours
         Vector2 force = new Vector2(0,0);
-        foreach (var magnetObject in _magnetObjects.Values){
-            force += CalculatePairwiseForce(magnetObject.rigidBody);
-            magnetObject.light.color = Color.Lerp(Color.red, Color.blue, (float)_slimeActiveCharge / 2 + 0.5f);
+        // foreach (var magnetObject in _magnetObjects.Values){
+        //     force += CalculatePairwiseForce(magnetObject.rigidBody);
+        //     magnetObject.light.color = Color.Lerp(Color.red, Color.blue, (float)_slimeActiveCharge / 2 + 0.5f);
+        // }
+
+        if (Input.GetKeyDown(KeyCode.W)) {
+            force.y += 10;
+        }
+        if (Input.GetKeyDown(KeyCode.S)) {
+            force.y -= 10;
+        }
+        if (Input.GetKeyDown(KeyCode.A)) {
+            force.x -= 10;
+        }
+        if (Input.GetKeyDown(KeyCode.D)) {
+            force.x += 10;
         }
 
         _slimeRigidBody.AddForce(force);

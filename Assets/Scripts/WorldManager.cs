@@ -27,35 +27,35 @@ public class WorldManager : MonoBehaviour
     void Start()
     {
         for (int i = -_renderDistance; i <= _renderDistance; i++) {
-
             LinkedList<GameObject> row = new LinkedList<GameObject>();
 
             for (int j = -_renderDistance; j <= _renderDistance; j++) {
-                Debug.Log("What?");
-                var chunkObject = InitializeChunk(new Vector2Int(i,j));
+                var chunkObject = InitializeChunk(new Vector2Int(j, i));
                 row.AddLast(chunkObject);
             }
 
-            _loadedChunks.AddLast(row);
+            _loadedChunks.AddFirst(row);
         }
+
+        _previousRelativePlayerChunkIndex = GetRelativeChunkIndex(_playerRigidBody.position);
     }
 
     // Update is called once per frame
     void Update()
     {
-        var relativePlayerChunkIndex= GetRelativeChunkIndex(_playerRigidBody.position);
+        var relativePlayerChunkIndex = GetRelativeChunkIndex(_playerRigidBody.position);
 
-        if(relativePlayerChunkIndex == _previousRelativePlayerChunkIndex) return;
+        if (relativePlayerChunkIndex == _previousRelativePlayerChunkIndex) return;
 
         var chunkOffset = relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
-        _absolutePlayerChunkIndex += chunkOffset; 
+        _absolutePlayerChunkIndex += chunkOffset;
 
         // column shift
         if (chunkOffset.x != 0) {
-            int i = -_renderDistance;
+            int i = _renderDistance;
             for (var row = _loadedChunks.First; row != null; row = row.Next) {
-                var leftRelativeChunkIndex = new Vector2Int(i, -_renderDistance);
-                var rightRelativeChunkIndex = new Vector2Int(i, _renderDistance);
+                var leftRelativeChunkIndex = new Vector2Int(-_renderDistance, i);
+                var rightRelativeChunkIndex = new Vector2Int(_renderDistance, i);
                 if (chunkOffset.x > 0) {
                     // chunks shift left, player moves right
                     UnloadChunk(leftRelativeChunkIndex, row.Value.First.Value);
@@ -67,7 +67,7 @@ public class WorldManager : MonoBehaviour
                     row.Value.RemoveLast();
                     row.Value.AddFirst(InitializeChunk(leftRelativeChunkIndex));
                 }
-                i++;
+                i--;
             }
         }
 
@@ -85,8 +85,8 @@ public class WorldManager : MonoBehaviour
             }
             int j = -_renderDistance;
             for (var chunk = rowToRemove.First; chunk != null; chunk = chunk.Next) {
-                var topRelativeChunkIndex = new Vector2Int(_renderDistance, j);
-                var bottomRelativeChunkIndex = new Vector2Int(-_renderDistance, j);
+                var topRelativeChunkIndex = new Vector2Int(j, _renderDistance);
+                var bottomRelativeChunkIndex = new Vector2Int(j, -_renderDistance);
                 if (chunkOffset.y < 0) {
                     // shift down
                     UnloadChunk(topRelativeChunkIndex, chunk.Value);
@@ -106,7 +106,7 @@ public class WorldManager : MonoBehaviour
         
         if (Math.Abs(relativePlayerChunkIndex.x) > _renderDistance) {
             Vector2 shiftDelta = new Vector2(
-                (relativePlayerChunkIndex.x - _renderDistance) * _chunkSize * _renderDistance, 
+                - Math.Clamp(relativePlayerChunkIndex.x, -1, 1) * _chunkSize * _renderDistance, 
                 0
             );
             TeleportWorld(shiftDelta);
@@ -115,7 +115,7 @@ public class WorldManager : MonoBehaviour
         if (Math.Abs(relativePlayerChunkIndex.y) > _renderDistance) {
             Vector2 shiftDelta = new Vector2(
                 0, 
-                (relativePlayerChunkIndex.y - _renderDistance) *_chunkSize * _renderDistance
+                - Math.Clamp(relativePlayerChunkIndex.y, -1, 1)  *_chunkSize * _renderDistance
             );
             TeleportWorld(shiftDelta);
         }
@@ -125,7 +125,7 @@ public class WorldManager : MonoBehaviour
         GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
         foreach (var gameObject in allGameObjects)
         {
-            gameObject.transform.position -= (Vector3)shiftDelta;
+            gameObject.transform.position += (Vector3)shiftDelta;
         }
         _previousRelativePlayerChunkIndex = Vector2Int.zero;
         int numVcams = CinemachineCore.Instance.VirtualCameraCount;
@@ -149,22 +149,26 @@ public class WorldManager : MonoBehaviour
     private void UnloadChunk (Vector2Int chunkRelativeIndex, GameObject chunk) {
         var chunkScript = chunk.GetComponent<Chunk>();
         var absoluteChunkIndex = chunkScript.AbsoluteChunkIndex;
-        var entitiesInChunk = GetEntitiesInChunk(chunkRelativeIndex);
+        var entitiesInChunk = GetEntitiesInChunk(chunkRelativeIndex + _previousRelativePlayerChunkIndex);
+        Debug.Log(entitiesInChunk.Count);
         
         OnRemoveMagnets.Invoke(entitiesInChunk);
         var entityStorables = new List<Storable>();
         foreach (var entity in entitiesInChunk) {
-            
-            entityStorables.Add(new Storable());
+            Debug.Log(entity.transform.position);
+            // entityStorables.Add(new Storable());
             Destroy(entity);
         }
 
-        _visitedEntities.Add(absoluteChunkIndex, entityStorables);
+        Destroy(chunk);
+
+        // _visitedEntities.Add(absoluteChunkIndex, entityStorables);
     }
     
     private GameObject InitializeChunk (Vector2Int chunkRelativeIndex) {
         Vector2Int absoluteChunkIndex = _absolutePlayerChunkIndex + chunkRelativeIndex;
-        Vector2 centerPosition = new Vector2(chunkRelativeIndex.x * _chunkSize, chunkRelativeIndex.y * _chunkSize);
+        var relativePlayerChunkIndex= GetRelativeChunkIndex(_playerRigidBody.position);
+        Vector2 centerPosition = new Vector2((chunkRelativeIndex.x + relativePlayerChunkIndex.x) * _chunkSize, (chunkRelativeIndex.y + relativePlayerChunkIndex.y) * _chunkSize);
         var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
         var chunkScript = chunkObject.GetComponent<Chunk>();
         chunkScript.InitializeTerrain(_chunkSize,absoluteChunkIndex); // Uses seeds + location to determine terrain. Will need to implement world generation algorithm
@@ -178,8 +182,9 @@ public class WorldManager : MonoBehaviour
             
         }
         
-        chunkScript.InitializeNewEntities(_chunkSize, absoluteChunkIndex); // Not written yet xd
-        
+        var newEntities = chunkScript.InitializeNewEntities(_chunkSize, absoluteChunkIndex);
+        _loadedEntities.AddRange(newEntities);
+
         return chunkObject;
     }
 
