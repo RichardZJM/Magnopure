@@ -2,134 +2,197 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity;
+using System;
+using Cinemachine;
+using UnityEngine.SceneManagement;
 
 
 public class WorldManager : MonoBehaviour
 {
     [SerializeField] private float _chunkSize;          //Width of the chunk in units (Unity units)
-    [SerializeField] private float _renderDistance;     // Distance from the center of the render field to the outside bounds
+    [SerializeField] private int _renderDistance;     // Distance from the center of the render field to the outside bounds in chunks
     [SerializeField] private GameObject _chunkPrefab;
-
     [SerializeField] private Rigidbody2D _playerRigidBody;
+
+    public static event Action<List<GameObject>> OnRemoveMagnets;
 
     private Vector2Int _previousRelativePlayerChunkIndex = Vector2Int.zero;
     private Vector2Int _absolutePlayerChunkIndex = Vector2Int.zero;
 
-
-
     private LinkedList<LinkedList<GameObject>> _loadedChunks = new LinkedList<LinkedList<GameObject>>();
     private List<GameObject> _loadedEntities = new List<GameObject>();
     // unloaded entities associated with each chunk
-    private Dictionary<Vector2Int, List<Storable>> _unloadedEntities = new Dictionary<Vector2Int, List<Storable>>();
+    private Dictionary<Vector2Int, List<Storable>> _visitedEntities = new Dictionary<Vector2Int, List<Storable>>();
     // Start is called before the first frame update
     void Start()
     {
-        for (int i = -_renderDistance; i < _renderDistance; i++) {
+        for (int i = -_renderDistance; i <= _renderDistance; i++) {
 
-            List<GameObject> row = new List<GameObject>();
+            LinkedList<GameObject> row = new LinkedList<GameObject>();
 
-            for (int j = -_renderDistance; j < _renderDistance; j++) {
-                Vector2 centerPosition = new Vector2(i * _chunkSize + _chunkSize/2, j * _chunkSize + _chunkSize/2);
-                var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
-                chunkObject.Initialize(_chunkSize, new Vector2Int(x, y) + _absolutePlayerChunkIndex);
+            for (int j = -_renderDistance; j <= _renderDistance; j++) {
+                Debug.Log("What?");
+                var chunkObject = InitializeChunk(new Vector2Int(i,j));
                 row.AddLast(chunkObject);
             }
 
-            loadChunks.AddLast(row);
+            _loadedChunks.AddLast(row);
         }
     }
 
     // Update is called once per frame
     void Update()
     {
-        var relativePlayerChunkIndex= GetChunkIndex(_playerRigidBody.position);
+        var relativePlayerChunkIndex= GetRelativeChunkIndex(_playerRigidBody.position);
 
         if(relativePlayerChunkIndex == _previousRelativePlayerChunkIndex) return;
 
         var chunkOffset = relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += chunkOffset; 
 
-        var chunksToUnload = new List<(Vector2Int, GameObject)>();
-
         // column shift
-        if (chunkOffset.x > 0) {
-            // shift left
-            
+        if (chunkOffset.x != 0) {
+            int i = -_renderDistance;
             for (var row = _loadedChunks.First; row != null; row = row.Next) {
-
+                var leftRelativeChunkIndex = new Vector2Int(i, -_renderDistance);
+                var rightRelativeChunkIndex = new Vector2Int(i, _renderDistance);
+                if (chunkOffset.x > 0) {
+                    // chunks shift left, player moves right
+                    UnloadChunk(leftRelativeChunkIndex, row.Value.First.Value);
+                    row.Value.RemoveFirst();
+                    row.Value.AddLast(InitializeChunk(rightRelativeChunkIndex));
+                } else {
+                    // chunks shift right, player moves left
+                    UnloadChunk(rightRelativeChunkIndex, row.Value.Last.Value);
+                    row.Value.RemoveLast();
+                    row.Value.AddFirst(InitializeChunk(leftRelativeChunkIndex));
+                }
+                i++;
             }
-
-            for (int i = -_renderDistance; i < _renderDistance; i++) {
-                var relativeChunkIndex = new Vector2Int(i, -renderDistance);
-                chunksToUnload.Add((_loadedChunks[i + _renderDistance].RemoveFirst()));
-                _loadedChunksInitializeChunk(relativeChunkIndex);
-            }
-        } else {
-            // shift right
-
         }
 
-        // row shift
-        if (chunkOffset.y > 0) {
-            
-
-        } else {
-
-        }
-
-        foreach ((var relativeChunkIndex, var chunk) in chunksToUnload) {
-            var chunkScript = chunk.GetComponent<Chunk>();
-            var absoluteChunkIndex = chunkScript.absoluteChunkIndex;
-            var entitiesInChunk = GetEntitiesInChunk(relativeChunkIndex);
-            
-            foreach (var entity in entitiesInChunk) {
-                
+        if (chunkOffset.y != 0) {
+            LinkedList<GameObject> rowToRemove;
+            LinkedList<GameObject> rowToAdd = new LinkedList<GameObject>();
+            if (chunkOffset.y < 0) {
+                rowToRemove = _loadedChunks.First.Value;
+                _loadedChunks.RemoveFirst();
+                _loadedChunks.AddLast(rowToAdd);
+            } else {
+                rowToRemove = _loadedChunks.Last.Value;
+                _loadedChunks.RemoveLast();
+                _loadedChunks.AddFirst(rowToAdd);
+            }
+            int j = -_renderDistance;
+            for (var chunk = rowToRemove.First; chunk != null; chunk = chunk.Next) {
+                var topRelativeChunkIndex = new Vector2Int(_renderDistance, j);
+                var bottomRelativeChunkIndex = new Vector2Int(-_renderDistance, j);
+                if (chunkOffset.y < 0) {
+                    // shift down
+                    UnloadChunk(topRelativeChunkIndex, chunk.Value);
+                    rowToAdd.AddLast(InitializeChunk(bottomRelativeChunkIndex));
+                } else {
+                    // shift up
+                    UnloadChunk(bottomRelativeChunkIndex, chunk.Value);
+                    rowToAdd.AddLast(InitializeChunk(topRelativeChunkIndex));
+                }
+                j++;
             }
         }
         
-        _previousRelativePlayerChunkIndex = playerRelativeChunkIndex;
+        _previousRelativePlayerChunkIndex = relativePlayerChunkIndex;
+
+        // Teleportation script tp move everything back towards the center offset.
+        
+        if (Math.Abs(relativePlayerChunkIndex.x) > _renderDistance) {
+            Vector2 shiftDelta = new Vector2(
+                (relativePlayerChunkIndex.x - _renderDistance) * _chunkSize * _renderDistance, 
+                0
+            );
+            TeleportWorld(shiftDelta);
+        }
+        
+        if (Math.Abs(relativePlayerChunkIndex.y) > _renderDistance) {
+            Vector2 shiftDelta = new Vector2(
+                0, 
+                (relativePlayerChunkIndex.y - _renderDistance) *_chunkSize * _renderDistance
+            );
+            TeleportWorld(shiftDelta);
+        }
     }
+
+    private void TeleportWorld(Vector2 shiftDelta) {
+        GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+        foreach (var gameObject in allGameObjects)
+        {
+            gameObject.transform.position -= (Vector3)shiftDelta;
+        }
+        _previousRelativePlayerChunkIndex = Vector2Int.zero;
+        int numVcams = CinemachineCore.Instance.VirtualCameraCount;
+        
+        for (int i = 0; i < numVcams; ++i)
+        {
+            CinemachineCore.Instance.GetVirtualCamera(i)
+                .OnTargetObjectWarped(_playerRigidBody.gameObject.transform, shiftDelta);
+        }
+    }
+
 
     private Vector2Int GetRelativeChunkIndex(Vector2 position)
     {
         return new Vector2Int(
-            Mathf.FloorToInt((position.x + _chunkSize / 2 - _chunkOrigin.x) / _chunkSize),
-            Mathf.FloorToInt((position.y + _chunkSize / 2 - _chunkOrigin.y) / _chunkSize)
+            Mathf.FloorToInt(position.x / _chunkSize),
+            Mathf.FloorToInt(position.y / _chunkSize)
         );
     }
-    
-    private GameObject InitializeChunk (Vector2Int chunkRelativeIndex){
-        Vector2Int absoluteChunkIndex = _absolutePlayerChunkIndex + chunkRelativeIndex;
 
-        Vector2 centerPosition = new Vector2(chunkRelativeIndex* _chunkSize + _chunkSize/2, chunkRelativeIndex * _chunkSize + _chunkSize/2);
-        var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
-        chunkObject.InitializeTerrain(_chunkSize,absoluteChunkIndex);
+    private void UnloadChunk (Vector2Int chunkRelativeIndex, GameObject chunk) {
+        var chunkScript = chunk.GetComponent<Chunk>();
+        var absoluteChunkIndex = chunkScript.AbsoluteChunkIndex;
+        var entitiesInChunk = GetEntitiesInChunk(chunkRelativeIndex);
         
-        if(_unloadedEntities.ContainsKey(absoluteChunkIndex)){
-            var newEntities = _unloadedEntities[absoluteChunkIndex];
-            foreach (var entity in newEntities) entity.Load(chunkRelativeIndex * _chunkSize);
-            _unloadedEntities.Remove(absoluteChunkIndex);
+        OnRemoveMagnets.Invoke(entitiesInChunk);
+        var entityStorables = new List<Storable>();
+        foreach (var entity in entitiesInChunk) {
+            
+            entityStorables.Add(new Storable());
+            Destroy(entity);
+        }
+
+        _visitedEntities.Add(absoluteChunkIndex, entityStorables);
+    }
+    
+    private GameObject InitializeChunk (Vector2Int chunkRelativeIndex) {
+        Vector2Int absoluteChunkIndex = _absolutePlayerChunkIndex + chunkRelativeIndex;
+        Vector2 centerPosition = new Vector2(chunkRelativeIndex.x * _chunkSize, chunkRelativeIndex.y * _chunkSize);
+        var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
+        var chunkScript = chunkObject.GetComponent<Chunk>();
+        chunkScript.InitializeTerrain(_chunkSize,absoluteChunkIndex); // Uses seeds + location to determine terrain. Will need to implement world generation algorithm
+        
+        if(_visitedEntities.ContainsKey(absoluteChunkIndex)){
+            var previousEntitiesToLoad = _visitedEntities[absoluteChunkIndex];
+            foreach (var entity in previousEntitiesToLoad) entity.Load(new Vector2(chunkRelativeIndex.x * _chunkSize, chunkRelativeIndex.y * _chunkSize));
+            // _visitedEntites.Remove(absoluteChunkIndex); // This may be bug prone if things are not added to the unloadedEntities correctly, but theoretically should work.
             return chunkObject;
+        } else {
+            
         }
         
-        
-        chunkObject.InitializeNewEntities(_chunkSize, absoluteChunkIndex);
+        chunkScript.InitializeNewEntities(_chunkSize, absoluteChunkIndex); // Not written yet xd
         
         return chunkObject;
     }
 
-    private List<GameObjects> GetEntitiesInChunk(Vector2Int relativeChunkIndex) {
+    private List<GameObject> GetEntitiesInChunk(Vector2Int relativeChunkIndex) {
         List<GameObject> containedEntities = new List<GameObject>();
         Vector2 lowerBound = new Vector2(relativeChunkIndex.x * _chunkSize, relativeChunkIndex.y * _chunkSize);
         Vector2 upperBound = new Vector2(relativeChunkIndex.x * (_chunkSize + 1), relativeChunkIndex.y * (_chunkSize + 1));
         
         foreach (var entity in _loadedEntities) {
-            Vector2 position = entity.transform.positon;
-            if (position.x < lowerBound.x || position.x >upperBound.x || position.y < lowerBound.y || position.y >upperBound.y) continue;
+            Vector2 position = entity.transform.position;
+            if (position.x < lowerBound.x || position.x > upperBound.x || position.y < lowerBound.y || position.y > upperBound.y) continue;
             containedEntities.Add(entity);
         }
         return containedEntities;
     }
-
-    
 }

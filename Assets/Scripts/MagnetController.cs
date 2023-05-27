@@ -10,6 +10,8 @@ public class MagnetObject
     public Light2D light;
 }
 
+
+
 public class MagnetController : MonoBehaviour
 {
     //Constants
@@ -24,6 +26,8 @@ public class MagnetController : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
+        Chunk.OnAddMagnets += this.OnAddMagnets;
+        WorldManager.OnRemoveMagnets += this.OnRemoveMagnets;
         //Get References
         _slimeRigidBody = GetComponent<Rigidbody2D>();
         // _slimeRigidBody.AddForce(new Vector2(300,0));
