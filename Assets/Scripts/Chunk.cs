@@ -10,6 +10,7 @@ public class Chunk : MonoBehaviour
 {
     // Side length of the chunk
     private float _size;
+    public Vector2Int AbsoluteChunkIndex { get; private set; }
     private bool _isInitialized = false;
     private UnityEvent<List<GameObject>> onAddMagnets;
     private UnityEvent<List<GameObject>> onRemoveMagnets;
@@ -23,7 +24,7 @@ public class Chunk : MonoBehaviour
     private int _blockResolution = 8;
 
 
-    public void Initialize(float chunkSize, UnityEvent<List<GameObject>> onAddMagnets, UnityEvent<List<GameObject>> onRemoveMagnets)
+    public void InitializeNew(float chunkSize, Vector2Int absoluteChunkIndex)
     {
         if (_isInitialized)
         {
