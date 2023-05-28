@@ -134,19 +134,19 @@ public class WorldManager : MonoBehaviour
 
     private void TeleportWorld(Vector2 shiftDelta) {
         Debug.Log("Teleporting");
-        // GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-        // foreach (var gameObject in allGameObjects)
-        // {
-        //     gameObject.transform.position += (Vector3)shiftDelta;
-        // }
+        GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+        foreach (var gameObject in allGameObjects)
+        {
+            gameObject.transform.position += (Vector3)shiftDelta;
+        }
 
-         for (var row = _loadedChunks.First; row != null; row = row.Next) {
-            for(var chunkObject = row.Value.First; chunkObject!= null; chunkObject = chunkObject.Next){
-                chunkObject.Value.transform.position += (Vector3)shiftDelta;
-            }
-         }
+        //  for (var row = _loadedChunks.First; row != null; row = row.Next) {
+        //     for(var chunkObject = row.Value.First; chunkObject!= null; chunkObject = chunkObject.Next){
+        //         chunkObject.Value.transform.position += (Vector3)shiftDelta;
+        //     }
+        //  }
 
-         _playerRigidBody.gameObject.transform.position += (Vector3)shiftDelta;
+        //  _playerRigidBody.gameObject.transform.position += (Vector3)shiftDelta;
         
 
         _previousRelativePlayerChunkIndex = Vector2Int.zero;

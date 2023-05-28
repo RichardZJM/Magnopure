@@ -41,7 +41,7 @@ public class Chunk : MonoBehaviour
 
         // Decide how many magnets to spawn in this chunk
         int numMagnets = rnd.Next(_minNumMagnets, _maxNumMagnets + 1);
-        numMagnets = 0;
+        numMagnets = 2;
         for (int i = 0; i < numMagnets; ++i)
         {
             // position of the magnet relative to the center of the chunk
