@@ -50,16 +50,16 @@ public class MagnetController : MonoBehaviour
         // }
 
         if (Input.GetKeyDown(KeyCode.W)) {
-            force.y += 100;
+            force.y += 10;
         }
         if (Input.GetKeyDown(KeyCode.S)) {
-            force.y -= 100;
+            force.y -= 10;
         }
         if (Input.GetKeyDown(KeyCode.A)) {
-            force.x -= 100;
+            force.x -= 10;
         }
         if (Input.GetKeyDown(KeyCode.D)) {
-            force.x += 100;
+            force.x += 10;
         }
 
         _slimeRigidBody.AddForce(force);

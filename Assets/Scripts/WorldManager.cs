@@ -45,7 +45,16 @@ public class WorldManager : MonoBehaviour
     {
         var relativePlayerChunkIndex = GetRelativeChunkIndex(_playerRigidBody.position);
 
+        
+
         if (relativePlayerChunkIndex == _previousRelativePlayerChunkIndex) return;
+
+       for (var row = _loadedChunks.First; row != null; row = row.Next) {
+        if(row.Value.Count!=5) Debug.Log("Death");
+       }
+
+        Debug.Log("New Chunks");
+        // Debug.Log(_previousRelativePlayerChunkIndex);
 
         var chunkOffset = relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += chunkOffset;
@@ -70,33 +79,35 @@ public class WorldManager : MonoBehaviour
                 i--;
             }
         }
-
-        if (chunkOffset.y != 0) {
-            LinkedList<GameObject> rowToRemove;
-            LinkedList<GameObject> rowToAdd = new LinkedList<GameObject>();
-            if (chunkOffset.y < 0) {
-                rowToRemove = _loadedChunks.First.Value;
-                _loadedChunks.RemoveFirst();
-                _loadedChunks.AddLast(rowToAdd);
-            } else {
-                rowToRemove = _loadedChunks.Last.Value;
-                _loadedChunks.RemoveLast();
-                _loadedChunks.AddFirst(rowToAdd);
-            }
-            int j = -_renderDistance;
-            for (var chunk = rowToRemove.First; chunk != null; chunk = chunk.Next) {
-                var topRelativeChunkIndex = new Vector2Int(j, _renderDistance);
-                var bottomRelativeChunkIndex = new Vector2Int(j, -_renderDistance);
+        
+        else{
+            if (chunkOffset.y != 0) {
+                LinkedList<GameObject> rowToRemove;
+                LinkedList<GameObject> rowToAdd = new LinkedList<GameObject>();
                 if (chunkOffset.y < 0) {
-                    // shift down
-                    UnloadChunk(topRelativeChunkIndex, chunk.Value);
-                    rowToAdd.AddLast(InitializeChunk(bottomRelativeChunkIndex));
+                    rowToRemove = _loadedChunks.First.Value;
+                    _loadedChunks.RemoveFirst();
+                    _loadedChunks.AddLast(rowToAdd);
                 } else {
-                    // shift up
-                    UnloadChunk(bottomRelativeChunkIndex, chunk.Value);
-                    rowToAdd.AddLast(InitializeChunk(topRelativeChunkIndex));
+                    rowToRemove = _loadedChunks.Last.Value;
+                    _loadedChunks.RemoveLast();
+                    _loadedChunks.AddFirst(rowToAdd);
                 }
-                j++;
+                int j = -_renderDistance;
+                for (var chunk = rowToRemove.First; chunk != null; chunk = chunk.Next) {
+                    var topRelativeChunkIndex = new Vector2Int(j, _renderDistance);
+                    var bottomRelativeChunkIndex = new Vector2Int(j, -_renderDistance);
+                    if (chunkOffset.y < 0) {
+                        // shift down
+                        UnloadChunk(topRelativeChunkIndex, chunk.Value);
+                        rowToAdd.AddLast(InitializeChunk(bottomRelativeChunkIndex));
+                    } else {
+                        // shift up
+                        UnloadChunk(bottomRelativeChunkIndex, chunk.Value);
+                        rowToAdd.AddLast(InitializeChunk(topRelativeChunkIndex));
+                    }
+                    j++;
+                }
             }
         }
         
@@ -106,7 +117,7 @@ public class WorldManager : MonoBehaviour
         
         if (Math.Abs(relativePlayerChunkIndex.x) > _renderDistance) {
             Vector2 shiftDelta = new Vector2(
-                - Math.Clamp(relativePlayerChunkIndex.x, -1, 1) * _chunkSize * _renderDistance, 
+                - Math.Clamp(relativePlayerChunkIndex.x, -1, 1) * _chunkSize * (_renderDistance+0.5f), 
                 0
             );
             TeleportWorld(shiftDelta);
@@ -115,18 +126,29 @@ public class WorldManager : MonoBehaviour
         if (Math.Abs(relativePlayerChunkIndex.y) > _renderDistance) {
             Vector2 shiftDelta = new Vector2(
                 0, 
-                - Math.Clamp(relativePlayerChunkIndex.y, -1, 1)  *_chunkSize * _renderDistance
+                - Math.Clamp(relativePlayerChunkIndex.y, -1, 1)  *_chunkSize * (_renderDistance+0.5f)
             );
             TeleportWorld(shiftDelta);
         }
     }
 
     private void TeleportWorld(Vector2 shiftDelta) {
-        GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-        foreach (var gameObject in allGameObjects)
-        {
-            gameObject.transform.position += (Vector3)shiftDelta;
-        }
+        Debug.Log("Teleporting");
+        // GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+        // foreach (var gameObject in allGameObjects)
+        // {
+        //     gameObject.transform.position += (Vector3)shiftDelta;
+        // }
+
+         for (var row = _loadedChunks.First; row != null; row = row.Next) {
+            for(var chunkObject = row.Value.First; chunkObject!= null; chunkObject = chunkObject.Next){
+                chunkObject.Value.transform.position += (Vector3)shiftDelta;
+            }
+         }
+
+         _playerRigidBody.gameObject.transform.position += (Vector3)shiftDelta;
+        
+
         _previousRelativePlayerChunkIndex = Vector2Int.zero;
         int numVcams = CinemachineCore.Instance.VirtualCameraCount;
         
@@ -141,8 +163,8 @@ public class WorldManager : MonoBehaviour
     private Vector2Int GetRelativeChunkIndex(Vector2 position)
     {
         return new Vector2Int(
-            Mathf.FloorToInt(position.x / _chunkSize),
-            Mathf.FloorToInt(position.y / _chunkSize)
+            Mathf.FloorToInt((position.x + _chunkSize/2) / _chunkSize),
+            Mathf.FloorToInt((position.y + _chunkSize/2 )/ _chunkSize)
         );
     }
 
@@ -150,21 +172,15 @@ public class WorldManager : MonoBehaviour
         var chunkScript = chunk.GetComponent<Chunk>();
         var absoluteChunkIndex = chunkScript.AbsoluteChunkIndex;
         var entitiesInChunk = GetEntitiesInChunk(chunkRelativeIndex + _previousRelativePlayerChunkIndex);
-        // Debug.Log(_loadedEntities.Count);
-        Debug.Log(entitiesInChunk.Count);
         
         OnRemoveMagnets.Invoke(entitiesInChunk);
         var entityStorables = new List<Storable>();
         foreach (var entity in entitiesInChunk) {
-            // Debug.Log(entity.transform.position);
-            // entityStorables.Add(new Storable());
             _loadedEntities.Remove(entity);
             Destroy(entity);
         }
 
         Destroy(chunk);
-
-        // _visitedEntities.Add(absoluteChunkIndex, entityStorables);
     }
     
     private GameObject InitializeChunk (Vector2Int chunkRelativeIndex) {
@@ -194,7 +210,7 @@ public class WorldManager : MonoBehaviour
         List<GameObject> containedEntities = new List<GameObject>();
         Vector2 lowerBound = new Vector2((relativeChunkIndex.x - 0.5f) * _chunkSize , (relativeChunkIndex.y-0.5f) * _chunkSize);
         Vector2 upperBound = new Vector2((relativeChunkIndex.x + 0.5f) * _chunkSize , (relativeChunkIndex.y + 0.5f) * _chunkSize);
-        Debug.Log(upperBound-lowerBound);
+        // Debug.Log(upperBound-lowerBound);
         foreach (var entity in _loadedEntities) {
             Vector2 position = entity.transform.position;
             if (position.x < lowerBound.x || position.x > upperBound.x || position.y < lowerBound.y || position.y > upperBound.y) continue;
