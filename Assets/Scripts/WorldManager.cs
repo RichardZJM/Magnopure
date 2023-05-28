@@ -58,10 +58,10 @@ public class WorldManager : MonoBehaviour
             if(row.Value.Count!=5) Debug.Log("Death");
         }
 
-        Debug.Log("New Chunks");
-
         Vector2Int playerMoveDirection = _relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += playerMoveDirection;
+
+        Debug.Log($"New Chunks Move {playerMoveDirection}");
 
         UpdateLoadedChunks(playerMoveDirection);
 
@@ -71,20 +71,27 @@ public class WorldManager : MonoBehaviour
 
         if (Math.Abs(_relativePlayerChunkIndex.x) > _renderDistance)
         {
+
             Vector2 shiftDelta = new Vector2(
-                -Math.Clamp(_relativePlayerChunkIndex.x, -1, 1) * _chunkSize * (_renderDistance + 0.5f),
+                // Jack Guo: from my testing, the expression below is equivalent to
+                // -Math.Clamp(_relativePlayerChunkIndex.x, -1, 1) * _chunkSize * (_renderDistance + 1f)
+                // and both expressions seem to be working correctly. Until we run into any issues, I
+                // think we should stick to the simpler one.
+                -_relativePlayerChunkIndex.x * _chunkSize,
                 0
             );
             TeleportWorld(shiftDelta);
+            _previousRelativePlayerChunkIndex.x = 0;
         }
 
         if (Math.Abs(_relativePlayerChunkIndex.y) > _renderDistance)
         {
             Vector2 shiftDelta = new Vector2(
                 0,
-                -Math.Clamp(_relativePlayerChunkIndex.y, -1, 1) * _chunkSize * (_renderDistance + 0.5f)
+                -_relativePlayerChunkIndex.y * _chunkSize
             );
             TeleportWorld(shiftDelta);
+            _previousRelativePlayerChunkIndex.y = 0;
         }
     }
 
@@ -117,49 +124,46 @@ public class WorldManager : MonoBehaviour
                 i++;
             }
         }
-        else
+        else if (playerMoveDirection.y != 0)
         {
-            if (playerMoveDirection.y != 0)
+            LinkedList<GameObject> rowToRemove;
+            LinkedList<GameObject> rowToAdd = new LinkedList<GameObject>();
+            if (playerMoveDirection.y < 0)
             {
-                LinkedList<GameObject> rowToRemove;
-                LinkedList<GameObject> rowToAdd = new LinkedList<GameObject>();
+                // chunks shift up, player moves down
+                rowToRemove = _loadedChunksGrid.First.Value;
+                _loadedChunksGrid.RemoveFirst();
+                _loadedChunksGrid.AddLast(rowToAdd);
+            }
+            else
+            {
+                // chunk shift down, player moves up
+                rowToRemove = _loadedChunksGrid.Last.Value;
+                _loadedChunksGrid.RemoveLast();
+                _loadedChunksGrid.AddFirst(rowToAdd);
+            }
+            int j = 0;
+            for (var chunk = rowToRemove.First; chunk != null; chunk = chunk.Next)
+            {
+                var topRelativeChunkIndex = GetRelativeChunkIndex(0, j);
+                var bottomRelativeChunkIndex = GetRelativeChunkIndex(_loadedChunkGridSize - 1, j);
                 if (playerMoveDirection.y < 0)
                 {
-                    // chunks shift up, player moves down
-                    rowToRemove = _loadedChunksGrid.First.Value;
-                    _loadedChunksGrid.RemoveFirst();
-                    _loadedChunksGrid.AddLast(rowToAdd);
+                    UnloadChunk(topRelativeChunkIndex - playerMoveDirection, chunk.Value);
+                    rowToAdd.AddLast(InitializeChunk(bottomRelativeChunkIndex));
                 }
                 else
                 {
-                    // chunk shift down, player moves up
-                    rowToRemove = _loadedChunksGrid.Last.Value;
-                    _loadedChunksGrid.RemoveLast();
-                    _loadedChunksGrid.AddFirst(rowToAdd);
+                    UnloadChunk(bottomRelativeChunkIndex - playerMoveDirection, chunk.Value);
+                    rowToAdd.AddLast(InitializeChunk(topRelativeChunkIndex));
                 }
-                int j = 0;
-                for (var chunk = rowToRemove.First; chunk != null; chunk = chunk.Next)
-                {
-                    var topRelativeChunkIndex = GetRelativeChunkIndex(0, j);
-                    var bottomRelativeChunkIndex = GetRelativeChunkIndex(_loadedChunkGridSize - 1, j);
-                    if (playerMoveDirection.y < 0)
-                    {
-                        UnloadChunk(topRelativeChunkIndex - playerMoveDirection, chunk.Value);
-                        rowToAdd.AddLast(InitializeChunk(bottomRelativeChunkIndex));
-                    }
-                    else
-                    {
-                        UnloadChunk(bottomRelativeChunkIndex - playerMoveDirection, chunk.Value);
-                        rowToAdd.AddLast(InitializeChunk(topRelativeChunkIndex));
-                    }
-                    j++;
-                }
+                j++;
             }
         }
     }
 
     private void TeleportWorld(Vector2 shiftDelta) {
-        Debug.Log("Teleporting");
+        Debug.Log($"Teleporting by {shiftDelta}");
         GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
         foreach (var gameObject in allGameObjects)
         {
@@ -174,10 +178,7 @@ public class WorldManager : MonoBehaviour
 
         //  _playerRigidBody.gameObject.transform.position += (Vector3)shiftDelta;
         
-
-        _previousRelativePlayerChunkIndex = Vector2Int.zero;
         int numVcams = CinemachineCore.Instance.VirtualCameraCount;
-        
         for (int i = 0; i < numVcams; ++i)
         {
             CinemachineCore.Instance.GetVirtualCamera(i)
