@@ -36,7 +36,8 @@ public class Chunk : MonoBehaviour
         // transform.localScale = new Vector3(chunkSize, chunkSize, 0);
 
         // Random object with seed to generate same chunk given same seed
-        System.Random rnd = new System.Random(6942 + absoluteChunkIndex.x + absoluteChunkIndex.y*1000);
+        var seed = 69420;
+        System.Random rnd = new System.Random(seed + pairFunction(absoluteChunkIndex.x, absoluteChunkIndex.y*1000));
 
         // Decide how many magnets to spawn in this chunk
         int numMagnets = rnd.Next(_minNumMagnets, _maxNumMagnets + 1);
@@ -63,26 +64,9 @@ public class Chunk : MonoBehaviour
         return _magnets;
     }
 
-    // static string HashString(string text, string salt = "")
-    // {
-    //     if (String.IsNullOrEmpty(text))
-    //     {
-    //         return String.Empty;
-    //     }
-        
-    //     // Uses SHA256 to create the hash
-    //     using (var sha = new System.Security.Cryptography.SHA256Managed())
-    //     {
-    //         // Convert the string to a byte array first, to be processed
-    //         byte[] textBytes = System.Text.Encoding.UTF8.GetBytes(text + salt);
-    //         byte[] hashBytes = sha.ComputeHash(textBytes);
-            
-    //         // Convert back to a string, removing the '-' that BitConverter adds
-    //         string hash = BitConverter
-    //             .ToString(hashBytes)
-    //             .Replace("-", String.Empty);
-
-    //         return hash;
-    //     }
-    // }
+    // Gaurantees to return a unique integer number for each (i, j) pair
+    private int pairFunction(int i, int j)
+    {
+        return (i + j) * (i + j + 1) / 2 + j;
+    }
 }
