@@ -36,7 +36,7 @@ public class Chunk : MonoBehaviour
         // transform.localScale = new Vector3(chunkSize, chunkSize, 0);
 
         // Random object with seed to generate same chunk given same seed
-        System.Random rnd = new System.Random(6942 + absoluteChunkIndex.x);
+        System.Random rnd = new System.Random(6942 + absoluteChunkIndex.x + absoluteChunkIndex.y*1000);
 
         // Decide how many magnets to spawn in this chunk
         int numMagnets = rnd.Next(_minNumMagnets, _maxNumMagnets + 1);

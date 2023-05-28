@@ -150,13 +150,15 @@ public class WorldManager : MonoBehaviour
         var chunkScript = chunk.GetComponent<Chunk>();
         var absoluteChunkIndex = chunkScript.AbsoluteChunkIndex;
         var entitiesInChunk = GetEntitiesInChunk(chunkRelativeIndex + _previousRelativePlayerChunkIndex);
+        // Debug.Log(_loadedEntities.Count);
         Debug.Log(entitiesInChunk.Count);
         
         OnRemoveMagnets.Invoke(entitiesInChunk);
         var entityStorables = new List<Storable>();
         foreach (var entity in entitiesInChunk) {
-            Debug.Log(entity.transform.position);
+            // Debug.Log(entity.transform.position);
             // entityStorables.Add(new Storable());
+            _loadedEntities.Remove(entity);
             Destroy(entity);
         }
 
@@ -190,9 +192,9 @@ public class WorldManager : MonoBehaviour
 
     private List<GameObject> GetEntitiesInChunk(Vector2Int relativeChunkIndex) {
         List<GameObject> containedEntities = new List<GameObject>();
-        Vector2 lowerBound = new Vector2(relativeChunkIndex.x * _chunkSize, relativeChunkIndex.y * _chunkSize);
-        Vector2 upperBound = new Vector2(relativeChunkIndex.x * (_chunkSize + 1), relativeChunkIndex.y * (_chunkSize + 1));
-        
+        Vector2 lowerBound = new Vector2((relativeChunkIndex.x - 0.5f) * _chunkSize , (relativeChunkIndex.y-0.5f) * _chunkSize);
+        Vector2 upperBound = new Vector2((relativeChunkIndex.x + 0.5f) * _chunkSize , (relativeChunkIndex.y + 0.5f) * _chunkSize);
+        Debug.Log(upperBound-lowerBound);
         foreach (var entity in _loadedEntities) {
             Vector2 position = entity.transform.position;
             if (position.x < lowerBound.x || position.x > upperBound.x || position.y < lowerBound.y || position.y > upperBound.y) continue;
