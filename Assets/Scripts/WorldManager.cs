@@ -61,7 +61,7 @@ public class WorldManager : MonoBehaviour
         Vector2Int playerMoveDirection = _relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += playerMoveDirection;
 
-        Debug.Log($"New Chunks Move {playerMoveDirection}");
+        // Debug.Log($"New Chunks Move {playerMoveDirection}");
 
         UpdateLoadedChunks(playerMoveDirection);
 
@@ -163,7 +163,7 @@ public class WorldManager : MonoBehaviour
     }
 
     private void TeleportWorld(Vector2 shiftDelta) {
-        Debug.Log($"Teleporting by {shiftDelta}");
+        // Debug.Log($"Teleporting by {shiftDelta}");
         GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
         foreach (var gameObject in allGameObjects)
         {
@@ -223,7 +223,7 @@ public class WorldManager : MonoBehaviour
             _loadedEntities.Remove(entity);
             Destroy(entity);
         }
-
+        chunkScript.KillTerrain(_chunkSize, absoluteChunkIndex);
         Destroy(chunk);
     }
     

@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Follow: {fileID: 1217813259}
   m_Lens:
     FieldOfView: 34
-    OrthographicSize: 20
+    OrthographicSize: 15
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -350,7 +350,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 20
+  orthographic size: 15
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1043,7 +1043,7 @@ GameObject:
   - component: {fileID: 1321256634}
   m_Layer: 0
   m_Name: Tilemap_base
-  m_TagString: Untagged
+  m_TagString: tilemap
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
