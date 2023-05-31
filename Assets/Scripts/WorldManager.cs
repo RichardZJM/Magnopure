@@ -63,7 +63,7 @@ public class WorldManager : MonoBehaviour
         Vector2Int playerMoveDirection = _relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += playerMoveDirection;
 
-        // Debug.Log($"New Chunks Move {playerMoveDirection}");
+        //Debug.Log($"New Chunks Move {playerMoveDirection}");
 
         UpdateLoadedChunks(playerMoveDirection);
 
@@ -99,34 +99,7 @@ public class WorldManager : MonoBehaviour
 
     private void UpdateLoadedChunks( Vector2Int playerMoveDirection)
     {
-        // column shift
-        if (playerMoveDirection.x != 0)
-        {
-            int i = 0;
-            for (var row = _loadedChunksGrid.First; row != null; row = row.Next)
-            {
-                var leftRelativeChunkIndex = GetRelativeChunkIndex(i, 0);
-                var rightRelativeChunkIndex = GetRelativeChunkIndex(i, _loadedChunkGridSize - 1);
-                if (playerMoveDirection.x > 0)
-                {
-                    // chunks shift left, player moves right
-                    // we need to know the previous index of the chunk to remove before the player moved
-                    // so we subtract the player move direction
-                    UnloadChunk(leftRelativeChunkIndex - playerMoveDirection, row.Value.First.Value);
-                    row.Value.RemoveFirst();
-                    row.Value.AddLast(InitializeChunk(rightRelativeChunkIndex));
-                }
-                else
-                {
-                    // chunks shift right, player moves left
-                    UnloadChunk(rightRelativeChunkIndex - playerMoveDirection, row.Value.Last.Value);
-                    row.Value.RemoveLast();
-                    row.Value.AddFirst(InitializeChunk(leftRelativeChunkIndex));
-                }
-                i++;
-            }
-        }
-        else if (playerMoveDirection.y != 0)
+        if (playerMoveDirection.y != 0)
         {
             LinkedList<GameObject> rowToRemove;
             LinkedList<GameObject> rowToAdd = new LinkedList<GameObject>();
@@ -162,23 +135,49 @@ public class WorldManager : MonoBehaviour
                 j++;
             }
         }
+
+        // column shift
+        if (playerMoveDirection.x != 0)
+        {
+            int i = 0;
+            for (var row = _loadedChunksGrid.First; row != null; row = row.Next)
+            {
+                if ((playerMoveDirection.y > 0 && i == 0) || (playerMoveDirection.y < 0 && i == _loadedChunkGridSize - 1))
+                {
+                    i++;
+                    continue;
+                }
+
+                var leftRelativeChunkIndex = GetRelativeChunkIndex(i, 0);
+                var rightRelativeChunkIndex = GetRelativeChunkIndex(i, _loadedChunkGridSize - 1);
+                if (playerMoveDirection.x > 0)
+                {
+                    // chunks shift left, player moves right
+                    // we need to know the previous index of the chunk to remove before the player moved
+                    // so we subtract the player move direction
+                    UnloadChunk(leftRelativeChunkIndex - playerMoveDirection, row.Value.First.Value);
+                    row.Value.RemoveFirst();
+                    row.Value.AddLast(InitializeChunk(rightRelativeChunkIndex));
+                }
+                else
+                {
+                    // chunks shift right, player moves left
+                    UnloadChunk(rightRelativeChunkIndex - playerMoveDirection, row.Value.Last.Value);
+                    row.Value.RemoveLast();
+                    row.Value.AddFirst(InitializeChunk(leftRelativeChunkIndex));
+                }
+                i++;
+            }
+        }
     }
 
     private void TeleportWorld(Vector2 shiftDelta) {
-        // Debug.Log($"Teleporting by {shiftDelta}");
+        //Debug.Log($"Teleporting by {shiftDelta}");
         GameObject[] allGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
         foreach (var gameObject in allGameObjects)
         {
             gameObject.transform.position += (Vector3)shiftDelta;
         }
-
-        //  for (var row = _loadedChunks.First; row != null; row = row.Next) {
-        //     for(var chunkObject = row.Value.First; chunkObject!= null; chunkObject = chunkObject.Next){
-        //         chunkObject.Value.transform.position += (Vector3)shiftDelta;
-        //     }
-        //  }
-
-        //  _playerRigidBody.gameObject.transform.position += (Vector3)shiftDelta;
         
         int numVcams = CinemachineCore.Instance.VirtualCameraCount;
         for (int i = 0; i < numVcams; ++i)
