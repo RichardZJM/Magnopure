@@ -16,6 +16,7 @@ public class Chunk : MonoBehaviour
  
     [SerializeField] private GameObject _magnetPrefab;
     private Tilemap _tilemap;
+    private ProceduralGeneration _proceduralGeneration;
     [SerializeField] private Tile _tile;
 
     private int _minNumMagnets = 0;
@@ -28,10 +29,11 @@ public class Chunk : MonoBehaviour
 
     public static event Action<List<GameObject>> OnAddMagnets;
 
-    public void InitializeTerrain(float chunkSize, Vector2Int absoluteChunkIndex, Tilemap tilemap) {
+    public void InitializeTerrain(float chunkSize, Vector2Int absoluteChunkIndex, Tilemap tilemap, ProceduralGeneration proceduralGeneration) {
         // Generate terrain based on seed, chunk size and location, and number of terrains per chunk (can be a randomly generated amount too)
         AbsoluteChunkIndex = absoluteChunkIndex;
         _tilemap = tilemap;
+        _proceduralGeneration = proceduralGeneration;
         // Set the scale of the chunk so the background size is updated
         transform.localScale = new Vector3(chunkSize, chunkSize, 0);
         _magnets = new List<GameObject>();
@@ -42,7 +44,7 @@ public class Chunk : MonoBehaviour
             int x = (int)chunkCorner.x + i;
             for (int j = 0; j< blockCount; j++){
                 int y = (int)chunkCorner.y + j;
-                if (ProceduralGeneration.EvaluateTerrain(new Vector2(x, y))) _tilemap.SetTile(new Vector3Int(x, y, 0), _tile);
+                if (_proceduralGeneration.EvaluateTerrain(new Vector2(x, y))) _tilemap.SetTile(new Vector3Int(x, y, 0), _tile);
             }   
         }
         

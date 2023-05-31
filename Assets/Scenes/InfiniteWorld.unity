@@ -1041,6 +1041,7 @@ GameObject:
   - component: {fileID: 1321256633}
   - component: {fileID: 1321256632}
   - component: {fileID: 1321256634}
+  - component: {fileID: 1321256635}
   m_Layer: 0
   m_Name: Tilemap_base
   m_TagString: tilemap
@@ -1194,6 +1195,21 @@ TilemapCollider2D:
   m_Offset: {x: 0, y: 0}
   m_MaximumTileChangeCount: 1000
   m_ExtrusionFactor: 0
+--- !u!114 &1321256635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1321256630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2eb37417f727ca1528e5525cd852f06c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _seed: 1337
+  _playerRigidbody2D: {fileID: 1217813256}
+  biomeColorMap: {fileID: 2800000, guid: 3b080b6e7a153f68789078160d1dc8fa, type: 3}
 --- !u!1 &1359570539
 GameObject:
   m_ObjectHideFlags: 0
@@ -1365,6 +1381,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1729470978
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1729470980}
+  - component: {fileID: 1729470979}
+  m_Layer: 0
+  m_Name: Post Processor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1729470979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1729470978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 0.449
+  sharedProfile: {fileID: 11400000, guid: 1bd7b285b803198fe8ff3ae3168fe44a, type: 2}
+--- !u!4 &1729470980
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1729470978}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 374.61493, y: 594.89685, z: -7.242158}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1758416214
 GameObject:
   m_ObjectHideFlags: 0
@@ -1566,6 +1631,8 @@ MonoBehaviour:
   _chunkPrefab: {fileID: 5871769894803508280, guid: c838ecdf33561594f819c8b54edc2c54, type: 3}
   _playerRigidBody: {fileID: 1217813256}
   _tilemap: {fileID: 1321256633}
+  _proceduralGeneration: {fileID: 1321256635}
+  _postProcessor: {fileID: 1729470979}
 --- !u!1 &1906808621
 GameObject:
   m_ObjectHideFlags: 0

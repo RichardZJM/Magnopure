@@ -6,6 +6,8 @@ using System;
 using Cinemachine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 
 public class WorldManager : MonoBehaviour
@@ -15,6 +17,9 @@ public class WorldManager : MonoBehaviour
     [SerializeField] private GameObject _chunkPrefab;
     [SerializeField] private Rigidbody2D _playerRigidBody;
     [SerializeField] private Tilemap _tilemap;
+    [SerializeField] private ProceduralGeneration _proceduralGeneration;
+    [SerializeField] private Volume _postProcessor;
+    private ColorAdjustments _colorFilter;
 
     public static event Action<List<GameObject>> OnRemoveMagnets;
 
@@ -30,6 +35,9 @@ public class WorldManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+         _postProcessor.profile.TryGet<ColorAdjustments>(out _colorFilter);
+         _colorFilter.colorFilter.value = _proceduralGeneration.GetBiome(_absolutePlayerChunkIndex*32);      //Post-process based on the biome the player is in.
+
         _loadedChunkGridSize = _renderDistance * 2 + 1;
         _relativePlayerChunkIndex = GetRelativeChunkIndex(_playerRigidBody.position);
         _previousRelativePlayerChunkIndex = _relativePlayerChunkIndex;
@@ -49,6 +57,7 @@ public class WorldManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
         // identifies the index of the chunk containing the player
         // the UpdateLoadedChunks function ensures that the player chunk is always at the center of
         // the 2D array of loaded chunks
@@ -58,6 +67,8 @@ public class WorldManager : MonoBehaviour
 
         Vector2Int playerMoveDirection = _relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += playerMoveDirection;
+
+        _colorFilter.colorFilter.value = _proceduralGeneration.GetBiome(_absolutePlayerChunkIndex*32);      //Post-process based on the biome the player is in.
 
         //Debug.Log($"New Chunks Move {playerMoveDirection}");
 
@@ -213,11 +224,6 @@ public class WorldManager : MonoBehaviour
         );
     }
 
-    // private int GetPlayerBiome(){
-    //     Vector2 playerAbsolutePosition = _absolutePlayerChunkIndex * _chunkSize + _playerRigidBody,position;
-        
-    // }
-
     private void UnloadChunk (Vector2Int relativeChunkIndex, GameObject chunk) {
         var chunkScript = chunk.GetComponent<Chunk>();
         var absoluteChunkIndex = chunkScript.AbsoluteChunkIndex;
@@ -238,7 +244,7 @@ public class WorldManager : MonoBehaviour
         Vector2 centerPosition = new Vector2(relativeChunkIndex.x * _chunkSize, relativeChunkIndex.y * _chunkSize);
         var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
         var chunkScript = chunkObject.GetComponent<Chunk>();
-        chunkScript.InitializeTerrain(_chunkSize,absoluteChunkIndex, _tilemap); // Uses seeds + location to determine terrain. Will need to implement world generation algorithm
+        chunkScript.InitializeTerrain(_chunkSize,absoluteChunkIndex, _tilemap, _proceduralGeneration); // Uses seeds + location to determine terrain. Will need to implement world generation algorithm
         
         if(_visitedEntities.ContainsKey(absoluteChunkIndex)) {
             var previousEntitiesToLoad = _visitedEntities[absoluteChunkIndex];
