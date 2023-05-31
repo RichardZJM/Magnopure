@@ -95,6 +95,8 @@ public class WorldManager : MonoBehaviour
 
     private void UpdateLoadedChunks( Vector2Int playerMoveDirection)
     {
+        // new row must be added first in the event that the player moves diagonally to avoid
+        // misaligned chunks in the column
         if (playerMoveDirection.y != 0)
         {
             LinkedList<GameObject> rowToRemove;
@@ -138,6 +140,8 @@ public class WorldManager : MonoBehaviour
             int i = 0;
             for (var row = _loadedChunksGrid.First; row != null; row = row.Next)
             {
+                // if player is moving diagonally, then we don't add a chunk to the new row otherwise
+                // it would create a duplicate chunk
                 if ((playerMoveDirection.y > 0 && i == 0) || (playerMoveDirection.y < 0 && i == _loadedChunkGridSize - 1))
                 {
                     i++;
