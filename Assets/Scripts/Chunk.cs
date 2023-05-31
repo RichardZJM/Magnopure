@@ -42,7 +42,7 @@ public class Chunk : MonoBehaviour
             int x = (int)chunkCorner.x + i;
             for (int j = 0; j< blockCount; j++){
                 int y = (int)chunkCorner.y + j;
-                if(ProceduralGeneration.EvaluateTerrain(new Vector2(x,y))) _tilemap.SetTile(new Vector3Int(x,y,0), _tile);
+                if (ProceduralGeneration.EvaluateTerrain(new Vector2(x, y))) _tilemap.SetTile(new Vector3Int(x, y, 0), _tile);
             }   
         }
         

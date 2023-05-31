@@ -56,10 +56,6 @@ public class WorldManager : MonoBehaviour
 
         if (_relativePlayerChunkIndex == _previousRelativePlayerChunkIndex) return;
 
-        for (var row = _loadedChunksGrid.First; row != null; row = row.Next) {
-            if(row.Value.Count!=5) Debug.Log("Death");
-        }
-
         Vector2Int playerMoveDirection = _relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += playerMoveDirection;
 
