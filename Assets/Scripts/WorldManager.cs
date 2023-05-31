@@ -28,6 +28,8 @@ public class WorldManager : MonoBehaviour
     private Vector2Int _previousRelativePlayerChunkIndex = Vector2Int.zero;
     private Vector2Int _absolutePlayerChunkIndex = Vector2Int.zero;
 
+    private Color _currentBiomeColor;
+
     private LinkedList<LinkedList<GameObject>> _loadedChunksGrid = new LinkedList<LinkedList<GameObject>>();
     private List<GameObject> _loadedEntities = new List<GameObject>();
     // unloaded entities associated with each chunk
@@ -36,7 +38,8 @@ public class WorldManager : MonoBehaviour
     void Start()
     {
          _postProcessor.profile.TryGet<ColorAdjustments>(out _colorFilter);
-         _colorFilter.colorFilter.value = _proceduralGeneration.GetBiome(_absolutePlayerChunkIndex*32);      //Post-process based on the biome the player is in.
+        _colorFilter.colorFilter.value = _currentBiomeColor = 
+            _proceduralGeneration.GetBiome(_absolutePlayerChunkIndex * 32);           //Post-process based on the biome the player is in.
 
         _loadedChunkGridSize = _renderDistance * 2 + 1;
         _relativePlayerChunkIndex = GetRelativeChunkIndex(_playerRigidBody.position);
@@ -57,7 +60,13 @@ public class WorldManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        float biomeColorChangeSpeed = 2.5f;
+        _colorFilter.colorFilter.value = Color.Lerp(
+            _colorFilter.colorFilter.value,
+            _currentBiomeColor,
+            biomeColorChangeSpeed * Time.deltaTime
+        );
+
         // identifies the index of the chunk containing the player
         // the UpdateLoadedChunks function ensures that the player chunk is always at the center of
         // the 2D array of loaded chunks
@@ -68,7 +77,8 @@ public class WorldManager : MonoBehaviour
         Vector2Int playerMoveDirection = _relativePlayerChunkIndex - _previousRelativePlayerChunkIndex;
         _absolutePlayerChunkIndex += playerMoveDirection;
 
-        _colorFilter.colorFilter.value = _proceduralGeneration.GetBiome(_absolutePlayerChunkIndex*32);      //Post-process based on the biome the player is in.
+        //Post-process based on the biome the player is in.
+        _currentBiomeColor = _proceduralGeneration.GetBiome(_absolutePlayerChunkIndex * 32);
 
         //Debug.Log($"New Chunks Move {playerMoveDirection}");
 
