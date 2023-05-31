@@ -5,6 +5,7 @@ using Unity;
 using System;
 using Cinemachine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 
 
 public class WorldManager : MonoBehaviour
@@ -13,6 +14,7 @@ public class WorldManager : MonoBehaviour
     [SerializeField] private int _renderDistance;     // Distance from the center of the render field to the outside bounds in chunks
     [SerializeField] private GameObject _chunkPrefab;
     [SerializeField] private Rigidbody2D _playerRigidBody;
+    [SerializeField] private Tilemap _tilemap;
 
     public static event Action<List<GameObject>> OnRemoveMagnets;
 
@@ -212,6 +214,11 @@ public class WorldManager : MonoBehaviour
         );
     }
 
+    // private int GetPlayerBiome(){
+    //     Vector2 playerAbsolutePosition = _absolutePlayerChunkIndex * _chunkSize + _playerRigidBody,position;
+        
+    // }
+
     private void UnloadChunk (Vector2Int relativeChunkIndex, GameObject chunk) {
         var chunkScript = chunk.GetComponent<Chunk>();
         var absoluteChunkIndex = chunkScript.AbsoluteChunkIndex;
@@ -232,7 +239,7 @@ public class WorldManager : MonoBehaviour
         Vector2 centerPosition = new Vector2(relativeChunkIndex.x * _chunkSize, relativeChunkIndex.y * _chunkSize);
         var chunkObject = Instantiate(_chunkPrefab, centerPosition, Quaternion.identity);
         var chunkScript = chunkObject.GetComponent<Chunk>();
-        chunkScript.InitializeTerrain(_chunkSize,absoluteChunkIndex); // Uses seeds + location to determine terrain. Will need to implement world generation algorithm
+        chunkScript.InitializeTerrain(_chunkSize,absoluteChunkIndex, _tilemap); // Uses seeds + location to determine terrain. Will need to implement world generation algorithm
         
         if(_visitedEntities.ContainsKey(absoluteChunkIndex)) {
             var previousEntitiesToLoad = _visitedEntities[absoluteChunkIndex];
@@ -262,3 +269,4 @@ public class WorldManager : MonoBehaviour
         return containedEntities;
     }
 }
+

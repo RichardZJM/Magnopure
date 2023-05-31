@@ -313,7 +313,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -1565,6 +1565,7 @@ MonoBehaviour:
   _renderDistance: 2
   _chunkPrefab: {fileID: 5871769894803508280, guid: c838ecdf33561594f819c8b54edc2c54, type: 3}
   _playerRigidBody: {fileID: 1217813256}
+  _tilemap: {fileID: 1321256633}
 --- !u!1 &1906808621
 GameObject:
   m_ObjectHideFlags: 0

@@ -28,10 +28,10 @@ public class Chunk : MonoBehaviour
 
     public static event Action<List<GameObject>> OnAddMagnets;
 
-    public void InitializeTerrain(float chunkSize, Vector2Int absoluteChunkIndex) {
+    public void InitializeTerrain(float chunkSize, Vector2Int absoluteChunkIndex, Tilemap tilemap) {
         // Generate terrain based on seed, chunk size and location, and number of terrains per chunk (can be a randomly generated amount too)
         AbsoluteChunkIndex = absoluteChunkIndex;
-        _tilemap = GameObject.FindGameObjectsWithTag("tilemap")[0].GetComponent<Tilemap>();
+        _tilemap = tilemap;
         // Set the scale of the chunk so the background size is updated
         transform.localScale = new Vector3(chunkSize, chunkSize, 0);
         _magnets = new List<GameObject>();
@@ -42,7 +42,7 @@ public class Chunk : MonoBehaviour
             int x = (int)chunkCorner.x + i;
             for (int j = 0; j< blockCount; j++){
                 int y = (int)chunkCorner.y + j;
-                if(PerlinComponent(new Vector2(x,y)) > _terrainCutoff) _tilemap.SetTile(new Vector3Int(x,y,0), _tile);
+                if(ProceduralGeneration.EvaluateTerrain(new Vector2(x,y))) _tilemap.SetTile(new Vector3Int(x,y,0), _tile);
             }   
         }
         
@@ -99,13 +99,7 @@ public class Chunk : MonoBehaviour
     {
         return (i + j) * (i + j + 1) / 2 + j;
     }
-
-    private float PerlinComponent(Vector2 blockCoordinate){
-        Vector2 perlinCoordinate = blockCoordinate * _perlinScaling;
-        float perlinValue = Mathf.PerlinNoise(perlinCoordinate.x + _seed,perlinCoordinate.y + _seed);
-        // Debug.Log(perlinValue);
-        return perlinValue;
-    }
+    
 }
 
 
