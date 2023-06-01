@@ -2,21 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Storable : MonoBehaviour
+public struct Storable
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    public void Load(Vector2 relativeOffset){
-
-    }
+    public string prefabPath;
+    public Vector2 offsetFromChunk;
+    public Quaternion rotation;
+    public Vector2 velocity;
 }

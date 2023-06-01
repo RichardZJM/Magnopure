@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _magnetPrefab: {fileID: 765080085986249669, guid: 679bf0e835803e48c8c8f6182f1fd7e1, type: 3}
-  _tilemap: {fileID: 0}
   _tile: {fileID: 11400000, guid: f928d2220c23ae6068f3a4655b692849, type: 2}
+  _prefab: {fileID: 5871769894803508280}
 --- !u!212 &5038646128249675571
 SpriteRenderer:
   m_ObjectHideFlags: 0

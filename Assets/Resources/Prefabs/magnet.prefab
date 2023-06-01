@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 765080085986249672}
   - component: {fileID: 765080085986249675}
+  - component: {fileID: 7929699090125520721}
   - component: {fileID: 765080085986249674}
   - component: {fileID: 765080085986249673}
   - component: {fileID: 7612197854734406134}
@@ -87,6 +88,19 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &7929699090125520721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765080085986249669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9b2929ab762ee945afb4dbe334c4c8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _prefabPath: Prefabs/magnet
 --- !u!58 &765080085986249674
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -111,12 +125,12 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 765080085986249669}
-  m_BodyType: 2
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDrag: 0
+  m_LinearDrag: 0.2
   m_AngularDrag: 0.05
   m_GravityScale: 0
   m_Material: {fileID: 0}

@@ -242,9 +242,19 @@ public class WorldManager : MonoBehaviour
         OnRemoveMagnets.Invoke(entitiesInChunk);
         var entityStorables = new List<Storable>();
         foreach (var entity in entitiesInChunk) {
+            PrefabReference prefabReference = entity.GetComponent<PrefabReference>();
+            Storable entityStorable = new Storable
+            {
+                prefabPath = prefabReference.GetPrefabPath(),
+                offsetFromChunk = new Vector2(entity.transform.position.x - relativeChunkIndex.x * _chunkSize, entity.transform.position.y - relativeChunkIndex.y * _chunkSize),
+                rotation = entity.transform.rotation,
+                velocity = entity.GetComponent<Rigidbody2D>().velocity
+            };
+            entityStorables.Add(entityStorable);
             _loadedEntities.Remove(entity);
             Destroy(entity);
         }
+        _visitedEntities[absoluteChunkIndex] = entityStorables;
         chunkScript.KillTerrain(_chunkSize, absoluteChunkIndex);
         Destroy(chunk);
     }
@@ -257,17 +267,21 @@ public class WorldManager : MonoBehaviour
         chunkScript.InitializeTerrain(_chunkSize,absoluteChunkIndex, _tilemap, _proceduralGeneration); // Uses seeds + location to determine terrain. Will need to implement world generation algorithm
         
         if(_visitedEntities.ContainsKey(absoluteChunkIndex)) {
-            var previousEntitiesToLoad = _visitedEntities[absoluteChunkIndex];
-            foreach (var entity in previousEntitiesToLoad) entity.Load(new Vector2(relativeChunkIndex.x * _chunkSize, relativeChunkIndex.y * _chunkSize));
-            // _visitedEntites.Remove(absoluteChunkIndex); // This may be bug prone if things are not added to the unloadedEntities correctly, but theoretically should work.
-            return chunkObject;
+            foreach (var entity in _visitedEntities[absoluteChunkIndex]) 
+            {
+                GameObject entityGameObject = Instantiate(
+                    Resources.Load<GameObject>(entity.prefabPath), 
+                    (Vector3)(centerPosition + entity.offsetFromChunk) + new Vector3(0, 0, -1), 
+                    entity.rotation
+                );
+                entityGameObject.GetComponent<Rigidbody2D>().velocity = entity.velocity;
+                _loadedEntities.Add(entityGameObject);
+            }
         } else {
-            
+            var newEntities = chunkScript.InitializeNewEntities(_chunkSize, absoluteChunkIndex);
+            _loadedEntities.AddRange(newEntities);
         }
         
-        var newEntities = chunkScript.InitializeNewEntities(_chunkSize, absoluteChunkIndex);
-        _loadedEntities.AddRange(newEntities);
-
         return chunkObject;
     }
 
