@@ -20,25 +20,25 @@ public class Chunk : MonoBehaviour
     [SerializeField] private Tile _tile;
 
     private int _minNumMagnets = 0;
-    private int _maxNumMagnets = 3;
+    private int _maxNumMagnets = 2;
     private int _seed = 69420;
     private int _unitResolution = 4;        // How many blocks we have per unit
-    private float _terrainCutoff = 0.54f;
-    private Vector2 _perlinScaling = new Vector2(0.02f,0.02f);
 
 
     public static event Action<List<GameObject>> OnAddMagnets;
 
     public void InitializeTerrain(float chunkSize, Vector2Int absoluteChunkIndex, Tilemap tilemap, ProceduralGeneration proceduralGeneration) {
-        // Generate terrain based on seed, chunk size and location, and number of terrains per chunk (can be a randomly generated amount too)
         AbsoluteChunkIndex = absoluteChunkIndex;
         _tilemap = tilemap;
-        _proceduralGeneration = proceduralGeneration;
         // Set the scale of the chunk so the background size is updated
         transform.localScale = new Vector3(chunkSize, chunkSize, 0);
         _magnets = new List<GameObject>();
-        
+
+        // Generate terrain based on seed, chunk size and location, and number of terrains per chunk (can be a randomly generated amount too)
+        _proceduralGeneration = proceduralGeneration;
+        // How many blocks line the side of a chunk
         int blockCount = (int) chunkSize * _unitResolution;
+        // absoluteChunkIndex * blockCount points to the center of the chunk, so subtract blockCount/2 to get corner of chunk
         Vector2 chunkCorner = new Vector2( (absoluteChunkIndex.x -0.5f) *  blockCount, (absoluteChunkIndex.y -0.5f)*  blockCount);
         for (int i = 0; i < blockCount; i++){
             int x = (int)chunkCorner.x + i;
@@ -73,7 +73,6 @@ public class Chunk : MonoBehaviour
 
         // Decide how many magnets to spawn in this chunk
         int numMagnets = rnd.Next(_minNumMagnets, _maxNumMagnets + 1);
-        numMagnets = 2;
         for (int i = 0; i < numMagnets; ++i)
         {
             // position of the magnet relative to the center of the chunk
